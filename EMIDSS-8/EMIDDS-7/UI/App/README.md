@@ -22,6 +22,7 @@ To compile and run this project, the following build tools are required:
 
 1. Clone the repository and navigate to the project root.
 2. Install the frontend dependencies:
+3. 
 ```bash
 npm install
 

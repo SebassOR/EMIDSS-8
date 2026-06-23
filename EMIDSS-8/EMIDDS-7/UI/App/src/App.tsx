@@ -1,49 +1,30 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { ConnectionManager } from "./components/ConnectionManager";
+import { TerminalConsole } from "./components/TerminalConsole";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <main className="min-h-screen bg-slate-950 px-6 py-6 text-slate-100">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <header className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
+          <p className="text-sm font-medium uppercase tracking-[0.3em] text-blue-400">
+            EMIDSS-8
+          </p>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+          <h1 className="mt-2 text-3xl font-bold text-white">
+            Telemetry Analysis Application
+          </h1>
+
+          <p className="mt-2 max-w-3xl text-slate-400">
+            Frontend foundation for UART connection management and live Rust log
+            monitoring.
+          </p>
+        </header>
+
+        <ConnectionManager />
+
+        <TerminalConsole />
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
     </main>
   );
 }
