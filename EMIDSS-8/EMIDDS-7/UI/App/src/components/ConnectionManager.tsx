@@ -86,7 +86,7 @@ export function ConnectionManager() {
           <select
             value={selectedPort}
             onChange={(event) => setSelectedPort(event.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-blue-500"
+            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none [color-scheme:dark] focus:border-blue-500"
           >
             {ports.length === 0 ? (
               <option value="">No ports detected</option>
@@ -106,7 +106,7 @@ export function ConnectionManager() {
           <select
             value={baudrate}
             onChange={(event) => setBaudrate(Number(event.target.value))}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-blue-500"
+            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none [color-scheme:dark] focus:border-blue-500"
           >
             <option value={9600}>9600</option>
             <option value={57600}>57600</option>
