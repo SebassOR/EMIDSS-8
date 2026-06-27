@@ -26,3 +26,10 @@ tokio = {version = "1", features = ["full"] }
 serialport = "4.3.0"
 tokio-serial = "5.4.4"
 polars = { version = "0.44.2", features = ["lazy", "serde"] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+strip = true
+opt-level = "s"

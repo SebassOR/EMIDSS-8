@@ -2,10 +2,18 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::{AppHandle, Emitter};
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::sync::{mpsc, Mutex};
 use tokio_serial::SerialPortBuilderExt;
 use polars::prelude::*;
 use serde_json::json;
+use std::sync::Arc;
+use std::time::Duration;
+
+struct AppState {
+    tx: Mutex<Option<mpsc::Sender<Vec<u8>>>>,
+    waiting_for_response: Arc<Mutex<bool>>,
+}
 
 // Command 1: Port Enumeration
 #[tauri::command]
@@ -24,7 +32,7 @@ fn get_avaible_ports() -> Result<Vec<String>, String> {
 
 // Command 2: Async Serial Connection
 #[tauri::command]
-async fn connect_uart(app: AppHandle, port: String, baudrate: u32) -> Result<(), String> {
+async fn connect_uart(app: AppHandle, state: tauri::State<'_, AppState>, port: String, baudrate: u32) -> Result<(), String> {
     // 1. Attempt to open the serial port
     let mut serial_stream = tokio_serial::new(&port, baudrate)
         .open_native_async()
@@ -38,23 +46,55 @@ async fn connect_uart(app: AppHandle, port: String, baudrate: u32) -> Result<(),
 
     println!("Succesfully connected to {} at {} baud", port, baudrate);
 
+    let (reader, mut writer) = tokio::io::split(serial_stream);
+    let (tx, mut rx) = mpsc::channel::<Vec<u8>>(32);
+
+    // Store sender in state
+    {
+        let mut tx_guard = state.tx.lock().await;
+        *tx_guard = Some(tx);
+    }
+
+    // Spawn async writer task
     tauri::async_runtime::spawn(async move {
-        let mut buf_reader = BufReader::new(serial_stream);
-        let mut line_buf = String::new();
+        while let Some(bytes) = rx.recv().await {
+            if let Err(e) = writer.write_all(&bytes).await {
+                eprintln!("Failed to write to serial port: {}", e);
+                break;
+            }
+        }
+    });
+
+    let waiting_flag = state.waiting_for_response.clone();
+    let app_clone = app.clone();
+
+    // Spawn async reader task with defensive parsing
+    tauri::async_runtime::spawn(async move {
+        let mut buf_reader = BufReader::new(reader);
+        let mut byte_buf = Vec::new();
         let mut in_dump = false;
         let mut dump_lines = Vec::new();
 
         loop {
-            line_buf.clear();
-            // Wait asynchronously for new data to arrive on the hardware
-            match buf_reader.read_line(&mut line_buf).await {
+            byte_buf.clear();
+            match buf_reader.read_until(b'\n', &mut byte_buf).await {
                 Ok(0) => {
-                    // EOF reached / port disconnected
                     println!("Serial port closed.");
+                    let _ = app_clone.emit("uart-rx", "[STATUS] Serial port disconnected.");
                     break;
                 }
                 Ok(_) => {
-                    let line = line_buf.trim().to_string();
+                    // Data received -> clear response timeout flag
+                    {
+                        let mut waiting = waiting_flag.lock().await;
+                        *waiting = false;
+                    }
+
+                    // Defensive conversion: lossy UTF-8 prevents crash on corrupted bytes
+                    let line = String::from_utf8_lossy(&byte_buf).trim().to_string();
+                    if line.is_empty() {
+                        continue;
+                    }
 
                     // Implement a parser block to recognize bulk memory dump
                     if line == "BEGIN_DUMP" {
@@ -63,9 +103,9 @@ async fn connect_uart(app: AppHandle, port: String, baudrate: u32) -> Result<(),
                         continue;
                     } else if line == "END_DUMP" {
                         in_dump = false;
-                        // Feed parsed data into a Polars DataFrame and emit
-                        if let Err(e) = process_and_emit_dump(&app, &dump_lines) {
-                            eprintln!("Error processing dump: {}", e);
+                        if let Err(e) = process_and_emit_dump(&app_clone, &dump_lines) {
+                            eprintln!("Dirty/corrupted dump data ignored: {}", e);
+                            let _ = app_clone.emit("uart-error", format!("Corrupted dump ignored: {}", e));
                         }
                         continue;
                     }
@@ -73,15 +113,22 @@ async fn connect_uart(app: AppHandle, port: String, baudrate: u32) -> Result<(),
                     if in_dump {
                         dump_lines.push(line);
                     } else {
-                        // Emit the string across the IPC bridge to the Web UI
-                        if let Err(e) = app.emit("uart-rx", line_buf.clone()) {
+                        if let Err(e) = app_clone.emit("uart-rx", line.clone()) {
                             eprintln!("Failed to emit to frontend: {}", e);
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("Error reading from serial port: {}", e);
-                    break;
+                    eprintln!("Defensive catch: Serial read error (dirty data): {}", e);
+                    let _ = app_clone.emit("uart-error", format!("Dirty hardware stream: {}", e));
+                    if e.kind() == std::io::ErrorKind::BrokenPipe
+                        || e.kind() == std::io::ErrorKind::ConnectionReset
+                        || e.kind() == std::io::ErrorKind::UnexpectedEof
+                    {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    continue;
                 }
             }
         }
@@ -90,7 +137,48 @@ async fn connect_uart(app: AppHandle, port: String, baudrate: u32) -> Result<(),
     Ok(())
 }
 
-// Polars parsing and interpolation
+// Command 3: Send Command with Timeout Mechanism
+#[tauri::command]
+async fn send_command(app: AppHandle, state: tauri::State<'_, AppState>, action: String) -> Result<(), String> {
+    let payload_bytes = match action.as_str() {
+        "Memory" | "ReadMemory" => b"S2202\n".to_vec(),
+        "Time" | "ReadTime" => b"S2201\n".to_vec(),
+        "Reset" | "ResetSensor" => b"S2203\n".to_vec(),
+        other => format!("{}\n", other).as_bytes().to_vec(),
+    };
+
+    let tx = {
+        let guard = state.tx.lock().await;
+        match &*guard {
+            Some(sender) => sender.clone(),
+            None => return Err("UART port is not connected".to_string()),
+        }
+    };
+
+    {
+        let mut waiting = state.waiting_for_response.lock().await;
+        *waiting = true;
+    }
+
+    tx.send(payload_bytes).await.map_err(|e| format!("Failed to send command: {}", e))?;
+
+    let waiting_flag = state.waiting_for_response.clone();
+    let app_clone = app.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        let waiting = waiting_flag.lock().await;
+        if *waiting {
+            let error_msg = format!("Timeout: No hardware response after sending command '{}'", action);
+            eprintln!("{}", error_msg);
+            let _ = app_clone.emit("uart-error", &error_msg);
+            let _ = app_clone.emit("uart-rx", format!("[ERROR] {}", error_msg));
+        }
+    });
+
+    Ok(())
+}
+
+// Polars parsing and interpolation with defensive Result/Option matching
 fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     let mut times = Vec::new();
     let mut temps: Vec<Option<f64>> = Vec::new();
@@ -99,20 +187,28 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
 
     for line in lines {
         let parts: Vec<&str> = line.split(',').collect();
-        // Fallback for different expected formats
         if parts.len() >= 5 {
             let hour = parts[0].trim();
             let min = parts[1].trim();
-            times.push(format!("{:0>2}:{:0>2}", hour, min));
-            temps.push(parts[2].trim().parse::<f64>().ok());
-            hums.push(parts[3].trim().parse::<f64>().ok());
-            press.push(parts[4].trim().parse::<f64>().ok());
+            if let (Ok(h), Ok(m)) = (hour.parse::<u32>(), min.parse::<u32>()) {
+                times.push(format!("{:02}:{:02}", h, m));
+                temps.push(parts[2].trim().parse::<f64>().ok());
+                hums.push(parts[3].trim().parse::<f64>().ok());
+                press.push(parts[4].trim().parse::<f64>().ok());
+            }
         } else if parts.len() == 4 {
-            times.push(parts[0].trim().to_string());
-            temps.push(parts[1].trim().parse::<f64>().ok());
-            hums.push(parts[2].trim().parse::<f64>().ok());
-            press.push(parts[3].trim().parse::<f64>().ok());
+            let t = parts[0].trim();
+            if !t.is_empty() {
+                times.push(t.to_string());
+                temps.push(parts[1].trim().parse::<f64>().ok());
+                hums.push(parts[2].trim().parse::<f64>().ok());
+                press.push(parts[3].trim().parse::<f64>().ok());
+            }
         }
+    }
+
+    if times.is_empty() {
+        return Err("No valid telemetry rows parsed from dump".into());
     }
 
     let time_s = Series::new("Time".into(), times);
@@ -122,7 +218,6 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
 
     let df = DataFrame::new(vec![time_s.into(), temp_s.into(), hum_s.into(), press_s.into()])?;
     
-    // Interpolate missing values
     let lf = df.lazy().with_columns([
         col("Temperature").forward_fill(None),
         col("Humidity").forward_fill(None),
@@ -132,16 +227,28 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
     let clean_df = lf.collect()?;
 
     let mut json_data = Vec::new();
-    let times_col = clean_df.column("Time")?.str()?;
-    let temps_col = clean_df.column("Temperature")?.f64()?;
-    let hums_col = clean_df.column("Humidity")?.f64()?;
-    let press_col = clean_df.column("Pressure")?.f64()?;
+    let times_col = match clean_df.column("Time") {
+        Ok(c) => c.str().ok(),
+        Err(_) => None,
+    };
+    let temps_col = match clean_df.column("Temperature") {
+        Ok(c) => c.f64().ok(),
+        Err(_) => None,
+    };
+    let hums_col = match clean_df.column("Humidity") {
+        Ok(c) => c.f64().ok(),
+        Err(_) => None,
+    };
+    let press_col = match clean_df.column("Pressure") {
+        Ok(c) => c.f64().ok(),
+        Err(_) => None,
+    };
 
     for i in 0..clean_df.height() {
-        let time_val = times_col.get(i).unwrap_or("");
-        let temp_val = temps_col.get(i).unwrap_or(0.0);
-        let hum_val = hums_col.get(i).unwrap_or(0.0);
-        let press_val = press_col.get(i).unwrap_or(0.0);
+        let time_val = times_col.and_then(|c| c.get(i)).unwrap_or("");
+        let temp_val = temps_col.and_then(|c| c.get(i)).unwrap_or(0.0);
+        let hum_val = hums_col.and_then(|c| c.get(i)).unwrap_or(0.0);
+        let press_val = press_col.and_then(|c| c.get(i)).unwrap_or(0.0);
 
         json_data.push(json!({
             "Time": time_val,
@@ -160,8 +267,11 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        // Register custom commands so frontend can read it
-        .invoke_handler(tauri::generate_handler![get_avaible_ports, connect_uart])
+        .manage(AppState {
+            tx: Mutex::new(None),
+            waiting_for_response: Arc::new(Mutex::new(false)),
+        })
+        .invoke_handler(tauri::generate_handler![get_avaible_ports, connect_uart, send_command])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
