@@ -107,22 +107,22 @@ To navigate the codebase efficiently, prioritize the following core files which 
 UI/
 ├── App/
 │   ├── src-tauri/
-│   │   ├── Cargo.toml         ⭐ [Backend Dependencies & Release Optimizations]
+│   │   ├── Cargo.toml            [Backend Dependencies & Release Optimizations]
 │   │   └── src/
-│   │       └── main.rs        🔥 [Core Rust Engine: Async UART, Polars, Defensive Parsing]
+│   │       └── main.rs           [Core Rust Engine: Async UART, Polars, Defensive Parsing]
 │   ├── src/
-│   │   ├── App.tsx            ⭐ [Main Application Layout Shell]
+│   │   ├── App.tsx               [Main Application Layout Shell]
 │   │   └── components/
-│   │       ├── ConnectionManager.tsx  ⭐ [COM Port Selector & Connect Logic]
-│   │       └── TerminalConsole.tsx    ⭐ [Live Scrolling Log Viewer]
+│   │       ├── ConnectionManager.tsx  [COM Port Selector & Connect Logic]
+│   │       └── TerminalConsole.tsx    [Live Scrolling Log Viewer]
 │   └── package.json
 └── Docs/
-    ├── audit.md               📘 [Legacy Codebase Engineering Audit]
-    ├── sdd.md                 📘 [Software Design Document & ADRs]
-    └── srs.md                 📘 [Software Requirements Specification]
+    ├── audit.md                [Legacy Codebase Engineering Audit]
+    ├── sdd.md                  [Software Design Document & ADRs]
+    └── srs.md                 [Software Requirements Specification]
 ```
 
-### 🔥 Highlights of Critical Files:
+### Highlights of Critical Files:
 
 1. **`UI/App/src-tauri/src/main.rs`**
    * *The heart of the backend.* It manages stateful UART connections (`AppState`), runs the `tokio` async serial loops, handles defensive lossy string conversions, intercepts `BEGIN_DUMP` / `END_DUMP` blocks, interpolates missing values via `Polars`, and enforces command timeouts.
