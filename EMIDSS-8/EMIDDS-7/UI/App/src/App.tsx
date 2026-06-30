@@ -1,5 +1,7 @@
 import "./App.css";
 import { ConnectionManager } from "./components/ConnectionManager";
+import { MissionControlPanel } from "./components/MissionControlPanel";
+import { TelemetryDashboard } from "./components/TelemetryDashboard";
 import { TerminalConsole } from "./components/TerminalConsole";
 
 function App() {
@@ -16,12 +18,16 @@ function App() {
           </h1>
 
           <p className="mt-2 max-w-3xl text-slate-400">
-            Frontend foundation for UART connection management and live Rust log
-            monitoring.
+            UART connection management, mission commands, live telemetry charts,
+            and Rust log monitoring.
           </p>
         </header>
 
         <ConnectionManager />
+
+        <MissionControlPanel />
+
+        <TelemetryDashboard />
 
         <TerminalConsole />
       </div>
