@@ -35,9 +35,9 @@ export function MissionControlPanel() {
   return (
     <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-lg">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">Mission Control Panel</h2>
+        <h2 className="text-lg font-semibold text-white">Mission Control Operations</h2>
         <p className="text-sm text-slate-400">
-          Send mission commands to the Rust backend through Tauri IPC
+          Execute payload telemetry reads and module service requests.
         </p>
       </div>
 

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-export function ConnectionManager() {
+interface ConnectionManagerProps {
+  onConnect?: () => void;
+}
+
+export function ConnectionManager({ onConnect }: ConnectionManagerProps) {
   const [ports, setPorts] = useState<string[]>([]);
   const [selectedPort, setSelectedPort] = useState("");
   const [baudrate, setBaudrate] = useState(115200);
@@ -18,16 +22,13 @@ export function ConnectionManager() {
       let detectedPorts: string[];
 
       try {
-        // Current backend command name
         detectedPorts = await invoke<string[]>("get_avaible_ports");
       } catch {
-        // Fallback if the backend command name gets corrected later
         detectedPorts = await invoke<string[]>("get_available_ports");
       }
 
       setPorts(detectedPorts);
 
-      // Select the first port by default
       if (detectedPorts.length > 0) {
         setSelectedPort(detectedPorts[0]);
       }
@@ -50,13 +51,13 @@ export function ConnectionManager() {
     setErrorMessage("");
 
     try {
-      // Rust handles the actual UART connection
       await invoke("connect_uart", {
         port: selectedPort,
         baudrate: Number(baudrate),
       });
 
       setStatus("connected");
+      onConnect?.();
     } catch (error) {
       setStatus("error");
       setErrorMessage(String(error));
@@ -64,16 +65,15 @@ export function ConnectionManager() {
   }
 
   useEffect(() => {
-    // Load ports when the component opens
     loadPorts();
   }, []);
 
   return (
     <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-lg">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">Connection Manager</h2>
+        <h2 className="text-lg font-semibold text-white">Connection Setup</h2>
         <p className="text-sm text-slate-400">
-          Select the UART/COM port and baudrate for the EMIDSS-8 payload.
+          Configure the serial port and baudrate to establish communication with the EMIDSS-8 flight module.
         </p>
       </div>
 
