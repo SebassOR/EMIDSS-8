@@ -50,35 +50,14 @@ extern "C"{
 #include "S32K312.h"
 #include <stdio.h>
 #include <string.h>
+#include "Iridium9603.h"
 
 
 #define TP_SENSOR_ADDR										0x76 //0b1110110, D1=Pressure, D2=Temperature
 #define H_SENSOR_ADDR										0x40 //0b1000000
 
 volatile int exit_code = 0;
-volatile uint32 stat_iridium_val = 99U;
-volatile uint32 stat_hsensor_val = 99U;
 
-/* Diagnostics globals to check pin configurations in the debugger */
-volatile uint32 mscr_ptd13 = 0;
-volatile uint32 mscr_ptd14 = 0;
-volatile uint32 mscr_ptc6 = 0;
-volatile uint32 mscr_ptc7 = 0;
-volatile uint32 imcr_212 = 0;
-volatile uint32 imcr_214 = 0;
-volatile uint32 imcr_217 = 0;
-volatile uint32 imcr_219 = 0;
-volatile uint32 imcr_dump[16] = {0};
-
-/* Diagnostics globals to check register addresses in the debugger */
-volatile uint32 addr_mscr_ptd13 = 0;
-volatile uint32 addr_mscr_ptd14 = 0;
-volatile uint32 addr_imcr_212 = 0;
-volatile uint32 addr_imcr_214 = 0;
-volatile uint32 addr_mscr_ptc6 = 0;
-volatile uint32 addr_mscr_ptc7 = 0;
-volatile uint32 addr_imcr_217 = 0;
-volatile uint32 addr_imcr_219 = 0;
 
 /* SysTick Registers for Cortex-M7 */
 #define SYST_CSR (*(volatile uint32*)0xE000E010)
@@ -114,7 +93,6 @@ int main(void)
     Clock_Ip_Init(&Clock_Ip_aClockConfig[0]);
 
 
-
     GPIO_u32SetOutputState(0);
 
     /* Initialize OS Tick (Hardware Timer mapped via OsIf) */
@@ -127,50 +105,52 @@ int main(void)
     Siul2_Port_Ip_Init(NUM_OF_CONFIGURED_PINS_PortContainer_0_BOARD_InitPeripherals,
            		g_pin_mux_InitConfigArr_PortContainer_0_BOARD_InitPeripherals);
 
-   // Lpi2c_Ip_MasterInit(I2C_INSTANCE_1, &I2c_Lpi2cMaster_HwChannel1_Channel0);
-    //Lpi2c_Ip_MasterInit(I2C_INSTANCE_0, &I2c_Lpi2cMaster_HwChannel0_Channel1);
 
-    // init I2C instances
-    I2C_vInit();
+    // Initialiaze all system modules, Sensors, Modem, MEMORY, first system checkup.
+
+    I2C0_vInit();
+    I2C1_vInit();
+    // Sensor MS8607 INIT
+	//sensor_vInit();
 
     /*****************************/
 
     /* App and Sensor Init */
-   // sensor_vInit();
 
     Time_init_time(23, 30);
-   // MEM_InitMemory();
-  //  I2C_vInit();
 
+    // MEM_InitMemory();
+
+    test_iridium();
 
     while(1)
     {
-        uint8_t test_msg[] = "im Alive";
-        uint32_t msg_length = strlen((char*)test_msg);
+    	//uint8_t test_msg= "Im alive";
+    	//uint8_t msg_length = 8;
 
         /* Test transmission on LPI2C_0 (Instance 0) */
-        Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_0, 0x40, (boolean)false);
-        stat_iridium_val = Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_0, test_msg, msg_length, true, 0xFFFFFFU);
+       //Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_0, 0x40, (boolean)false);
+       // Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_0, test_msg, msg_length, true, 0xFFFFFFU);
 
         /* Test transmission on LPI2C_1 (Instance 1) */
-        Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, 0x63, (boolean)false);
-        stat_hsensor_val = Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, test_msg, msg_length, true, 0xFFFFFFU);
+     //  Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, 0x63, (boolean)false);
+      // Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, test_msg, msg_length, true, 0xFFFFFFU);
 
         /* 
          * Note: Delay_count functions need to be updated to use OsIf_GetCounter 
          * instead of relying on the raw SysTick interrupt in Delay.c 
          */
-        /*
-        if(Delay_count_1_minute())//Called every 1m
-        {
-            Time_increase_minute();
-            Task_1m();
-        }
 
-        if(Delay_count_1_second()) //Called every 1s
-        {
-            Task_1s();
-        }*/
+  //      if(Delay_count_1_minute())//Called every 1m
+   //     {
+   //         Time_increase_minute();
+    //        Task_1m();
+     //   }
+
+       //8 if(Delay_count_1_second()) //Called every 1s
+       // {
+       //     Task_1s();
+       // }
     }
 }
 

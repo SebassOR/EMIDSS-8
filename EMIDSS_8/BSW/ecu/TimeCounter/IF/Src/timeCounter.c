@@ -50,10 +50,10 @@ uint8_t Time_get_minutes(void)
 
 uint8_t Time_set_hour(uint8_t new_hour)
 {
-	current_time.hour = new_hour;
+	return current_time.hour = new_hour;
 }
 
 uint8_t Time_set_minutes(uint8_t new_min)
 {
-	current_time.minutes = new_min;
+	return current_time.minutes = new_min;
 }

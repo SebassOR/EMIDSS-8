@@ -55,7 +55,7 @@ static Std_ReturnTypes hsensor_reset(void)
  */
 static Std_ReturnTypes hsensor_write_command(uint8_t cmd)
 {
-	return I2C_u8WriteCmd(H_SENSOR_ADDR, cmd);
+	return I2C0_u8WriteCmd(H_SENSOR_ADDR, &cmd);
 }
 
 /**
@@ -94,9 +94,10 @@ static Std_ReturnTypes hsensor_crc_check(uint16_t value, uint8_t crc)
 static Std_ReturnTypes hsensor_read_user_register(uint8_t *value, uint8_t size)
 {
 	Std_ReturnTypes error;
+	uint8_t Sensor_Read = H_SENSOR_READ_USER_REG_COMMAND;
 
 	// Send the Read Register Command
-	error = I2C_u8WriteCmd(H_SENSOR_ADDR, H_SENSOR_READ_USER_REG_COMMAND);
+	error = I2C0_u8WriteCmd(H_SENSOR_ADDR, &Sensor_Read);
 	if(!error){
 		/* Request data from the bus slave */
 		error = I2C0_u8Read(H_SENSOR_ADDR, value, size);
@@ -188,7 +189,7 @@ static Std_ReturnTypes psensor_reset(void)
  */
 static Std_ReturnTypes psensor_write_command(uint8_t cmd)
 {
-	return I2C_u8WriteCmd(TP_SENSOR_ADDR, cmd);
+	return I2C0_u8WriteCmd(TP_SENSOR_ADDR, &cmd);
 }
 
 /**
@@ -423,7 +424,7 @@ static Std_ReturnTypes psensor_read_pressure_and_temperature(float32 *temperatur
  */
 static void MS8607_vConfig(void)
 {
-	ms8607_config.i2c_instance = INST_LPI2C0;
+	ms8607_config.i2c_instance = I2C_INSTANCE_0;
 	ms8607_config.humidityResolution = ms8607_humidity_resolution_12b;
 	ms8607_config.tempPressResolution = ms8607_pressure_resolution_osr_1024;
 	ms8607_config.humidityMeasureMode = ms8607_i2c_hold;
@@ -451,7 +452,7 @@ static void MS8607_vGetADCDelay(void){
  */
 void ms8607_vInit(void)
 {	
-	I2C_vInit();
+	//I2C_vInit();  removed as both I2C instances are initated here
 	MS8607_vConfig();
 	MS8607_vGetADCDelay();
 }

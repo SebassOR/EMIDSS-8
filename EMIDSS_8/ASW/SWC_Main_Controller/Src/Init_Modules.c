@@ -13,6 +13,7 @@
 Std_ReturnTypes modules_init(void){
 
     Std_ReturnTypes std_result = E_NOT_OK;
+
     std_result = Drivers_init();
 
     return std_result;

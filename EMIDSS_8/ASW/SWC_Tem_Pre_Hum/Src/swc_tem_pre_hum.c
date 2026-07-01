@@ -18,6 +18,7 @@
  * \brief Init configuration of MS8607 sensor
  */
 Std_ReturnTypes sensor_vInit(void){
+
 	ms8607_vInit();
 	return ms8607_reset();
 }

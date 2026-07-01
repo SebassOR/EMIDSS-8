@@ -10,5 +10,6 @@
 
 void Task_1s(void);
 void Task_1m(void);
+void test_iridium(void);
 
 #endif /* SWC_OS_INC_SWC_OS_H_ */

@@ -755,7 +755,7 @@
                                  <setting name="I2cChannelId" value="0"/>
                                  <setting name="I2cHwChannel" value="LPI2C_1"/>
                                  <setting name="I2cMasterSlaveConfiguration" value="MASTER_MODE"/>
-                                 <setting name="I2cOperatingMode" value="LPI2C_FAST_MODE"/>
+                                 <setting name="I2cOperatingMode" value="LPI2C_STANDARD_MODE"/>
                                  <struct name="I2cMasterConfiguration">
                                     <setting name="Name" value="I2c_Lpi2cMasterChannel0"/>
                                     <setting name="I2cSlaveAddress" value="0X63"/>
@@ -764,16 +764,16 @@
                                     <setting name="I2cDebugEnable" value="false"/>
                                     <array name="I2cDmaTxChannelRef"/>
                                     <array name="I2cDmaRxChannelRef"/>
-                                    <setting name="I2cPrescaler" value="LPI2C_MASTER_PRESC_DIV_4"/>
+                                    <setting name="I2cPrescaler" value="LPI2C_MASTER_PRESC_DIV_16"/>
                                     <setting name="I2cMasterFilterEnable" value="false"/>
                                     <setting name="I2cGlitchFilterSDA" value="0"/>
                                     <setting name="I2cGlitchFilterSCL" value="0"/>
                                     <setting name="I2cPinLowTimeout" value="0"/>
                                     <setting name="I2cBusIdleTimeout" value="0"/>
-                                    <setting name="I2cDataValidDelay" value="10"/>
-                                    <setting name="I2cSetupHoldDelay" value="10"/>
-                                    <setting name="I2cClockHighPeriod" value="11"/>
-                                    <setting name="I2cClockLowPeriod" value="11"/>
+                                    <setting name="I2cDataValidDelay" value="4"/>
+                                    <setting name="I2cSetupHoldDelay" value="4"/>
+                                    <setting name="I2cClockHighPeriod" value="8"/>
+                                    <setting name="I2cClockLowPeriod" value="9"/>
                                     <struct name="I2cHighSpeedModeConfiguration">
                                        <setting name="Name" value="I2c_Lpi2cMasterHighSpeedMode0"/>
                                        <setting name="I2cMasterCode" value="0"/>

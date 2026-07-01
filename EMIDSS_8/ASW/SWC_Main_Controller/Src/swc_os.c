@@ -129,32 +129,8 @@ void Task_1m(void)/*Task Called Every 1min*/
 	SensorData_t sensorData;
 	Std_ReturnTypes SensorStatus = 0;
 
-	/********TEEEESTING I2C    ************////
 
-    uint8_t test_msg[] = "im Alive";
-    uint32_t msg_length = strlen((char*)test_msg);
-    uint8_t reg = IO_REG;
-    uint16_t target_address = 0x63;
-
-   // I2C_vInit(void);
-
-    Lpi2c_Ip_MasterInit(I2C_INSTANCE_1, &I2c_Lpi2cMaster_HwChannel1_Channel0);
-   // Lpi2c_Ip_MasterInit(I2C_INSTANCE_0, &I2c_Lpi2cMaster_HwChannel1_Channel0);
-
-    Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, target_address, (boolean)false);
-   // Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_0, target_address, (boolean)false);
-
-    Lpi2c_Ip_StatusType stat = Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, test_msg, msg_length, true, 100U);
-
-
-    stat = Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_0, test_msg, msg_length, true, 100U);
-        if (stat != LPI2C_IP_SUCCESS_STATUS)
-        	//while(1);
-
-
-	//*********************************************///
-
-	SensorStatus = getTemperaturePressureHumidity(&sensorData);
+	//SensorStatus = getTemperaturePressureHumidity(&sensorData);
 
     //if(OK == SensorStatus)/*Storing all data in memory if sensor status is OK.*/
     //{
@@ -178,7 +154,7 @@ void Task_1m(void)/*Task Called Every 1min*/
 		uint16_t Len = 0;
 		bool SendStatus = false;
 		uint32_t time_start = 0;
-		char TxMsg[100] = "Im Alive";
+		char TxMsg[100] = {0};
 		uint8_t SignalQlty = 0;
 
 		ModemState = Iridium9603_EnableModem();
@@ -209,3 +185,46 @@ void Task_1m(void)/*Task Called Every 1min*/
 		TxFlag = 0;
 	}
 }
+
+void test_iridium(void)
+{
+	SensorData_t sensorData;
+	Std_ReturnTypes SensorStatus = 0;
+
+	uint8_t ModemState = 0;
+	uint16_t Len = 0;
+	bool SendStatus = false;
+	uint32_t time_start = 0;
+	char TxMsg[100] = {0};
+	uint8_t SignalQlty = 0;
+
+	ModemState = Iridium9603_EnableModem();
+	if(ModemState)
+		{
+		const char *Test_Msg = "Hola Mundo";
+		uint8_t Len_test = 10;
+	//		Len = build_sensor_short_labeled(sensorData, TxMsg);
+//			Len = build_sensor_string_struct(sensorData, TxMsg);
+			time_start = Delay_u32GetTicks();
+			while (Delay_u32GetTicks() - time_start < IRIDIUM_TIMEOUT  && !SendStatus)
+			{
+				SignalQlty = Iridium9603_GetSignalQuality();
+				// TEST: Condicion para forzar la transmision
+				if(SignalQlty >= (uint8_t)IRIDIUM_SIGNAL_OK)
+				{
+					(void)Iridium9603_ClearMOBuffer();
+					//SendStatus = Iridium9603_SendSBDText((uint8_t*)TxMsg, Len);
+					SendStatus = Iridium9603_SendSBDText(Test_Msg, Len_test);
+				}
+
+				Delay_vMs(1000);
+			}
+
+		(void)Iridium9603_ClearMOBuffer();
+		}
+
+	(void)Iridium9603_DisableModem();
+
+	}
+
+

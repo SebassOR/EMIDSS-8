@@ -48,7 +48,9 @@ Functions_Management managment[]={
 Std_ReturnTypes init_controller(void)
 {
 	Std_ReturnTypes std_result = NOT_OK;
+
 	std_result = modules_init();
+
 
 
 	return std_result;

@@ -1,7 +1,7 @@
 /*
 * Iridium9603.c
 *
-*  Created on: Jun 2026
+*  Updated on: Jun 2026
 *      Author: Gerardo Trejo
 */
 
@@ -30,6 +30,9 @@
 #define IRIDIUM_PACKET_TX_SIZE		(8)
 
 #define IRIDIUM_RING_ALERT_FLAG		(0) 	/*set 1 to enable ring alert*/
+#define MAX_DATA_READ				(8)     //MAX chunk of bytes that can be read at once from the modem
+#define MAX_DATA_SEND				(32)   // Max chunk data buffer can be send to the modem at once
+
 /*******************************************************************************
 * Global variables
 ******************************************************************************/
@@ -40,28 +43,28 @@ static uint8_t MsgRecv[100] = {0};
 ******************************************************************************/
 static void Iridium9603_check_pins(void)
 {
-    uint8_t reg = IO_REG;
-    I2C1_u8Write(IRIDIUM_I2C_ADDRESS, reg, 0);
-    Delay_vMs(10);
+    uint8_t IO_reg = IO_REG;
+
+    I2C1_u8Write(IRIDIUM_I2C_ADDRESS, &IO_reg, 1);
+    Delay_vMs(50);
     I2C1_u8Read(IRIDIUM_I2C_ADDRESS, &IO_REGISTER, 1);
 }
 
-static void Iridium9603_set_io_register(uint8_t value)
+static void Iridium9603_set_io_register(uint8_t io_Register)
 {
-	uint8_t TXDataBuffer[2] = {IO_REG, 0};
-
-	TXDataBuffer[1] = value;
-	I2C1_u8Write(IRIDIUM_I2C_ADDRESS, TXDataBuffer[0], TXDataBuffer[1]);
+	uint8_t TX_set_io_Buffer[2] = {(uint8_t)IO_REG,  io_Register};
+//	TX_set_io_Buffer[1] = io_Register;
+	I2C1_u8Write(IRIDIUM_I2C_ADDRESS, TX_set_io_Buffer, 2);
 }
 
 static uint16_t Iridium9603_MsgAvailable(void)
 {
     uint8_t reg = LEN_REG;
     uint8_t len_bytes[2] = {0};
-    uint8_t Len = 0;
+    uint16_t Len = 0;
 
-    I2C1_u8Write(IRIDIUM_I2C_ADDRESS, reg, 0);
-    Delay_vMs(10);
+    I2C1_u8Write(IRIDIUM_I2C_ADDRESS, &reg, 1);
+    Delay_vMs(20);
     I2C1_u8Read(IRIDIUM_I2C_ADDRESS, len_bytes, 2);
 
     if(len_bytes[0] != 0xff && len_bytes[1] != 0xff)
@@ -74,13 +77,17 @@ static uint16_t Iridium9603_MsgAvailable(void)
 
 static void Iridium9603_send_command(uint8_t* Cmd, uint16_t lenght)
 {
-	uint8_t TXDataBuffer[64];
+	uint8_t CMD_PayLoad[lenght + 1 ];
 
-	TXDataBuffer[0] = DATA_REG;
-	memcpy(&TXDataBuffer[1], Cmd, lenght);
+	// TODO: in the doc sys data needs to be send in chunks smaller than 32 bytes
+	//TODO: implement a way to send chunks smaller than 32 bytes, 20 ms between chunks should be enough.
 
-	Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
-	Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, TXDataBuffer, lenght + 1, true, I2C_TIMEOUT);
+	CMD_PayLoad[0] = DATA_REG;
+	memcpy(&CMD_PayLoad[1], Cmd, lenght );
+	I2C1_u8WriteCmd(IRIDIUM_I2C_ADDRESS, CMD_PayLoad, lenght + 1 );
+
+	//Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
+//	Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, TXDataBuffer, lenght + 1, true, I2C_TIMEOUT);
 }
 
 static void Iridium9603_check_data(void)
@@ -95,19 +102,22 @@ static void Iridium9603_check_data(void)
 
 	if(Len > 0)
 	{
-		I2C1_u8Write(IRIDIUM_I2C_ADDRESS, reg, 0);
+		I2C1_u8Write(IRIDIUM_I2C_ADDRESS, &reg, 1);
 		Delay_vMs(100);
 
-		while (Len > IRIDIUM_PACKET_SIZE)
-		{
-			Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
-			Lpi2c_Ip_MasterReceiveDataBlocking(I2C_INSTANCE_1, &MsgRecv[offset], IRIDIUM_PACKET_SIZE, true, I2C_TIMEOUT);
+	while (Len >= IRIDIUM_PACKET_SIZE)
+	{
+			I2C1_u8Read(IRIDIUM_I2C_ADDRESS, &MsgRecv[offset], IRIDIUM_PACKET_SIZE);
+			//Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
+			//Lpi2c_Ip_MasterReceiveDataBlocking(I2C_INSTANCE_1, &MsgRecv[offset], IRIDIUM_PACKET_SIZE, true, I2C_TIMEOUT);
 			offset += IRIDIUM_PACKET_SIZE;
 			Len -= IRIDIUM_PACKET_SIZE;
-		}
+	}
+	if(Len > 0)
+		I2C1_u8Read(IRIDIUM_I2C_ADDRESS, &MsgRecv[offset], IRIDIUM_PACKET_SIZE);
 
-		Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
-		Lpi2c_Ip_MasterReceiveDataBlocking(I2C_INSTANCE_1, &MsgRecv[offset], Len, true, I2C_TIMEOUT);
+		//Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, IRIDIUM_I2C_ADDRESS, false);
+		//Lpi2c_Ip_MasterReceiveDataBlocking(I2C_INSTANCE_1, &MsgRecv[offset], Len, true, I2C_TIMEOUT);
 	}
 }
 
@@ -125,7 +135,7 @@ static bool Iridium9603_wait_for_response(const char *expected, uint32_t timeout
 			ResponseFlag = true;
 		}
 
-        Delay_vMs(1000);
+        Delay_vMs(100);
     }
 
     return ResponseFlag;
@@ -258,7 +268,7 @@ uint8_t Iridium9603_EnableModem(void)
         	break;
         }
 
-        Delay_vMs(1000);
+        Delay_vMs(900);
     }
 
     if (IO_REGISTER & IO_PGOOD)
@@ -269,13 +279,13 @@ uint8_t Iridium9603_EnableModem(void)
     	Iridium9603_check_data();  /*Get any waiting 9603 serial data*/
 
     	Iridium9603_Enable9603(true);
-		Delay_vMs(500);
+		Delay_vMs(100);
 
 		time_start = Delay_u32GetTicks();
 	    while ((Delay_u32GetTicks() - time_start) < IRIDIUM_WAIT_RESPONSE_TIME * 1000 && !modemAlive)
 	    {
 	    	Iridium9603_send_command(Cmd, sizeof(Cmd)); /* Turn on modem and wait for a response from "AT" command to begin */
-	    	Delay_vMs(200);
+	    	Delay_vMs(10);
 	    	modemAlive = Iridium9603_wait_for_response("OK", 5000);
 	    }
 

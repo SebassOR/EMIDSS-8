@@ -114,11 +114,11 @@ extern "C"
 
 static const Lpi2c_Ip_BaudRateType baudrateParams0 =
 {
-    /* .Prescaler */    LPI2C_MASTER_PRESC_DIV_4,
-    /* .ClkHI */        11U,
-    /* .ClkLO */        11U,
-    /* .SetHold */      10U,
-    /* .DataValid */    10U,
+    /* .Prescaler */    LPI2C_MASTER_PRESC_DIV_16,
+    /* .ClkHI */        8U,
+    /* .ClkLO */        9U,
+    /* .SetHold */      4U,
+    /* .DataValid */    4U,
 #if ( STD_ON == LPI2C_IP_FEATURE_CTRL_HS_MODE_AVAILABLE )
     /* .ClkHIHS */      1U,
     /* .ClkLOHS */      3U,
@@ -132,7 +132,7 @@ const Lpi2c_Ip_MasterConfigType I2c_Lpi2cMaster_HwChannel1_Channel0 =
     /* .SlaveAddress */     99U,
     /* .DebugMode */        (boolean)FALSE,
     /* .Is10bitAddr */      (boolean)FALSE,
-    /* .OperatingMode */    LPI2C_FAST_MODE,
+    /* .OperatingMode */    LPI2C_STANDARD_MODE,
     /* .BaudrateParams */   &baudrateParams0,
     /* .PinLowTimeout */    0U,
     /* .BusIdleTimeout */   0U,

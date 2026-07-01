@@ -18,7 +18,11 @@ Std_ReturnTypes Drivers_init(void){
     /* Clocks and Pins are already initialized in main.c via RTD */
 
     /* Init I2C Wrapper (Instances 0 and 1) */
-    I2C_vInit();
+    I2C0_vInit();
+    I2C1_vInit();
+
+    // Sensor MS8607 INIT
+	sensor_vInit();
 
     /* Init SPI Wrapper (Instance 1) */
     SPI_vInitMaster();
