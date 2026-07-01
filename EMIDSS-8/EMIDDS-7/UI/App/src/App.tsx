@@ -5,73 +5,66 @@ import { MissionControlPanel } from "./components/MissionControlPanel";
 import { TelemetryDashboard } from "./components/TelemetryDashboard";
 import { TerminalConsole } from "./components/TerminalConsole";
 
-type Section = "connection" | "operations" | "telemetry";
+type Section = "operations" | "telemetry";
 
 function App() {
-  const [activeSection, setActiveSection] = useState<Section>("connection");
+  const [activeSection, setActiveSection] = useState<Section>("operations");
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-6 text-slate-100">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg md:flex-row md:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-400">
-              EMIDSS-8 Module
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-white md:text-3xl">
-              Flight Payload Telemetry System
+    <main className="min-h-screen bg-[#0e0e0e] text-slate-100 font-sans selection:bg-slate-800">
+      <div className="mx-auto flex max-w-[1440px] flex-col p-6 md:p-8">
+        <header className="mb-8 flex flex-col justify-between gap-4 border-b border-[#262626] pb-5 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+            <h1 className="text-sm font-bold uppercase tracking-[0.25em] text-white">
+              EMIDSS-8 // FLIGHT PAYLOAD INTERFACE
             </h1>
           </div>
 
-          <nav className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveSection("connection")}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                activeSection === "connection"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "border border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              1. Connection Setup
-            </button>
+          <nav className="flex gap-1.5 bg-[#141414] p-1 rounded border border-[#262626]">
             <button
               onClick={() => setActiveSection("operations")}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${
                 activeSection === "operations"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "border border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "bg-white text-black font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
-              2. Operations Console
+              OPERATIONS CONSOLE
             </button>
             <button
               onClick={() => setActiveSection("telemetry")}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${
                 activeSection === "telemetry"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "border border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "bg-white text-black font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
-              3. Telemetry & Graphs
+              TELEMETRY GRAPHS
             </button>
           </nav>
         </header>
 
-        {activeSection === "connection" && (
-          <div className="flex flex-col gap-6">
-            <ConnectionManager onConnect={() => setActiveSection("operations")} />
-          </div>
-        )}
-
         {activeSection === "operations" && (
-          <div className="flex flex-col gap-6">
-            <MissionControlPanel />
-            <TerminalConsole />
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-stretch">
+            <div className="flex flex-col lg:col-span-4 xl:col-span-3 rounded border border-[#262626] bg-[#121212] p-6 shrink-0 justify-between">
+              <div>
+                <ConnectionManager />
+              </div>
+              <div className="my-6 border-t border-[#262626]" />
+              <div>
+                <MissionControlPanel />
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 xl:col-span-9 rounded border border-[#262626] bg-[#121212] p-6 flex flex-col">
+              <TerminalConsole />
+            </div>
           </div>
         )}
 
         {activeSection === "telemetry" && (
-          <div className="flex flex-col gap-6">
+          <div className="rounded border border-[#262626] bg-[#121212] p-6">
             <TelemetryDashboard />
           </div>
         )}

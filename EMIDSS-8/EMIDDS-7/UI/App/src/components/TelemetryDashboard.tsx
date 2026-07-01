@@ -85,35 +85,35 @@ export function TelemetryDashboard() {
   );
 
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-lg">
-      <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col">
+      <div className="mb-6 flex flex-col gap-3 border-b border-[#262626] pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">Telemetry & Graphs</h2>
-          <p className="text-sm text-slate-400">
-            Atmospheric measurements recorded during payload memory dump.
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+            ATMOSPHERIC TELEMETRY GRAPHS
+          </span>
+          <p className="text-xs text-slate-500 mt-1">
+            Recorded sensor data across memory dumps.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 md:items-end">
-          <div className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-300">
-            {statusMessage}
-          </div>
+        <div className="rounded border border-[#262626] bg-[#1a1a1a] px-3 py-1.5 font-mono text-xs text-slate-300">
+          {statusMessage}
         </div>
       </div>
 
       {errorMessage && (
-        <p className="mb-4 rounded-lg border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+        <p className="mb-4 rounded border border-red-900/50 bg-red-950/30 px-3 py-2 font-mono text-xs text-red-400">
           {errorMessage}
         </p>
       )}
 
       {telemetryData.length === 0 && (
-        <div className="mb-4 rounded-lg border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-500">
-          No telemetry data loaded yet. Use Operations Control to execute a memory read.
+        <div className="mb-4 rounded border border-[#262626] bg-[#141414] px-4 py-3 font-mono text-xs text-slate-500">
+          No telemetry records loaded yet. Use Operations Console to execute a memory read.
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-6 xl:grid-cols-3">
         <TelemetryLineChart
           title="Temperature"
           labels={chartLabels}
@@ -140,6 +140,6 @@ export function TelemetryDashboard() {
           backgroundColor="rgba(249, 115, 22, 0.15)"
         />
       </div>
-    </section>
+    </div>
   );
 }

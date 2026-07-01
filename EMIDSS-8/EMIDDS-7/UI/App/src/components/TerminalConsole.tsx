@@ -35,40 +35,35 @@ export function TerminalConsole() {
   }, [lines]);
 
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-lg">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-white">Serial Data Console</h2>
-          <p className="text-sm text-slate-400">
-            Real-time serial telemetry and diagnostic messages received from the flight module.
-          </p>
-        </div>
-
+    <div className="flex flex-col h-full">
+      <div className="mb-4 flex items-center justify-between border-b border-[#262626] pb-3">
+        <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          RAW TELEMETRY
+        </span>
         <button
           onClick={() => setLines([])}
-          className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800"
+          className="text-[10px] font-medium uppercase tracking-wider text-slate-500 hover:text-slate-300 transition"
         >
-          Clear
+          CLEAR
         </button>
       </div>
 
       <div
         ref={terminalRef}
-        className="h-[420px] overflow-y-auto rounded-xl border border-slate-800 bg-black p-4 font-mono text-sm text-green-400"
+        className="flex-1 min-h-[480px] max-h-[620px] overflow-y-auto font-mono text-xs leading-relaxed text-slate-300 space-y-1.5 pr-2"
       >
         {lines.length === 0 ? (
-          <p className="text-slate-500">Waiting for incoming serial telemetry stream...</p>
+          <div className="text-slate-600 font-mono text-xs py-2">
+            Waiting for incoming serial telemetry stream...
+          </div>
         ) : (
           lines.map((line, index) => (
-            <pre
-              key={`${index}-${line}`}
-              className="whitespace-pre-wrap break-words"
-            >
+            <div key={`${index}-${line}`} className="break-all whitespace-pre-wrap">
               {line}
-            </pre>
+            </div>
           ))
         )}
       </div>
-    </section>
+    </div>
   );
 }

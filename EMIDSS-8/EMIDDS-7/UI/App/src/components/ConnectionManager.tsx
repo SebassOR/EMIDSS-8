@@ -69,27 +69,31 @@ export function ConnectionManager({ onConnect }: ConnectionManagerProps) {
   }, []);
 
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-lg">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">Connection Setup</h2>
-        <p className="text-sm text-slate-400">
-          Configure the serial port and baudrate to establish communication with the EMIDSS-8 flight module.
-        </p>
+    <div className="flex flex-col">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          CONNECTION
+        </span>
+        <button
+          onClick={loadPorts}
+          className="text-[10px] font-medium uppercase tracking-wider text-slate-500 hover:text-slate-300 transition"
+        >
+          REFRESH
+        </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-slate-300">
-            Serial Port
+      <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            PORT
           </span>
-
           <select
             value={selectedPort}
             onChange={(event) => setSelectedPort(event.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none [color-scheme:dark] focus:border-blue-500"
+            className="w-full rounded bg-[#141414] border border-[#262626] px-3 py-2.5 text-sm font-mono text-slate-200 outline-none focus:border-slate-500"
           >
             {ports.length === 0 ? (
-              <option value="">No ports detected</option>
+              <option value="">NO PORTS DETECTED</option>
             ) : (
               ports.map((port) => (
                 <option key={port} value={port}>
@@ -100,13 +104,14 @@ export function ConnectionManager({ onConnect }: ConnectionManagerProps) {
           </select>
         </label>
 
-        <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-slate-300">Baudrate</span>
-
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            BAUD RATE
+          </span>
           <select
             value={baudrate}
             onChange={(event) => setBaudrate(Number(event.target.value))}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none [color-scheme:dark] focus:border-blue-500"
+            className="w-full rounded bg-[#141414] border border-[#262626] px-3 py-2.5 text-sm font-mono text-slate-200 outline-none focus:border-slate-500"
           >
             <option value={9600}>9600</option>
             <option value={57600}>57600</option>
@@ -114,54 +119,20 @@ export function ConnectionManager({ onConnect }: ConnectionManagerProps) {
           </select>
         </label>
 
-        <div className="flex items-end gap-2">
-          <button
-            onClick={handleConnect}
-            disabled={status === "loading" || !selectedPort}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700"
-          >
-            {status === "loading" ? "Loading..." : "Connect"}
-          </button>
+        <button
+          onClick={handleConnect}
+          disabled={status === "loading" || !selectedPort}
+          className="w-full mt-2 rounded bg-white py-3 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {status === "loading" ? "CONNECTING..." : status === "connected" ? "CONNECTED" : "CONNECT"}
+        </button>
 
-          <button
-            onClick={loadPorts}
-            className="rounded-lg border border-slate-700 px-4 py-2 font-medium text-slate-200 transition hover:bg-slate-800"
-          >
-            Refresh
-          </button>
-        </div>
+        {errorMessage && (
+          <p className="mt-2 rounded border border-red-900/50 bg-red-950/30 px-3 py-2 font-mono text-xs text-red-400">
+            {errorMessage}
+          </p>
+        )}
       </div>
-
-      <div className="mt-4 flex items-center gap-2 text-sm">
-        <span
-          className={
-            status === "connected"
-              ? "h-2.5 w-2.5 rounded-full bg-green-400"
-              : status === "error"
-                ? "h-2.5 w-2.5 rounded-full bg-red-400"
-                : "h-2.5 w-2.5 rounded-full bg-slate-500"
-          }
-        />
-
-        <span className="text-slate-300">
-          Status:{" "}
-          <strong className="text-white">
-            {status === "connected"
-              ? "Connected"
-              : status === "error"
-                ? "Error"
-                : status === "loading"
-                  ? "Loading"
-                  : "Idle"}
-          </strong>
-        </span>
-      </div>
-
-      {errorMessage && (
-        <p className="mt-3 rounded-lg border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-          {errorMessage}
-        </p>
-      )}
-    </section>
+    </div>
   );
 }
