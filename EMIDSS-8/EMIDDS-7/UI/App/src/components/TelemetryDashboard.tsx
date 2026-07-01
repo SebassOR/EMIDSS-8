@@ -173,13 +173,25 @@ export function TelemetryDashboard() {
           <span className="text-xs font-semibold tracking-widest text-zinc-200">EMIDSS-8 // HISTORIC TELEMETRY</span>
           <span className="text-[10px] font-mono text-zinc-500 ml-2">({statusMessage})</span>
         </div>
-        <button
-          onClick={handleExportCSV}
-          disabled={timelineData.length === 0}
-          className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Download size={14} /> EXPORT CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setTelemetryData([]);
+              setStatusMessage("Telemetry records cleared.");
+            }}
+            disabled={telemetryData.length === 0}
+            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            CLEAR DATA
+          </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={timelineData.length === 0}
+            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={14} /> EXPORT CSV
+          </button>
+        </div>
       </header>
 
       {errorMessage && (

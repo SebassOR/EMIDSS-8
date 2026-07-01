@@ -27,6 +27,11 @@ fn get_avaible_ports() -> Result<Vec<String>, String> {
         port_names.push(port.port_name);
     }
 
+    // Include virtual test simulator port if running
+    if std::path::Path::new("/tmp/emidss_sim_port").exists() && !port_names.contains(&"/tmp/emidss_sim_port".to_string()) {
+        port_names.insert(0, "/tmp/emidss_sim_port".to_string());
+    }
+
     Ok(port_names)
 }
 

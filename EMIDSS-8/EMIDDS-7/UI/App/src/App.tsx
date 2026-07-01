@@ -17,28 +17,26 @@ function App() {
           <div className="flex items-center gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
             <h1 className="text-sm font-bold uppercase tracking-[0.25em] text-white">
-              EMIDSS-8 // FLIGHT PAYLOAD INTERFACE
+              EMIDSS-8 // TELEMETRY TOOL
             </h1>
           </div>
 
           <nav className="flex gap-1.5 bg-[#141414] p-1 rounded border border-[#262626]">
             <button
               onClick={() => setActiveSection("operations")}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${
-                activeSection === "operations"
+              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${activeSection === "operations"
                   ? "bg-white text-black font-bold shadow-sm"
                   : "text-slate-400 hover:text-white hover:bg-[#1f1f1f]"
-              }`}
+                }`}
             >
               OPERATIONS CONSOLE
             </button>
             <button
               onClick={() => setActiveSection("telemetry")}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${
-                activeSection === "telemetry"
+              className={`px-5 py-2 text-xs font-semibold uppercase tracking-widest rounded transition ${activeSection === "telemetry"
                   ? "bg-white text-black font-bold shadow-sm"
                   : "text-slate-400 hover:text-white hover:bg-[#1f1f1f]"
-              }`}
+                }`}
             >
               TELEMETRY GRAPHS
             </button>
