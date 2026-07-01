@@ -64,7 +64,7 @@ function App() {
         )}
 
         {activeSection === "telemetry" && (
-          <div className="rounded border border-[#262626] bg-[#121212] p-6">
+          <div className="w-full">
             <TelemetryDashboard />
           </div>
         )}
