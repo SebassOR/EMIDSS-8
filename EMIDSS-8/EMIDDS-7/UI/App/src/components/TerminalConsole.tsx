@@ -6,24 +6,17 @@ export function TerminalConsole() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
+    const unlistenRx = listen<string>("uart-rx", (event) => {
+      setLines((currentLines) => [...currentLines, event.payload]);
+    });
 
-    async function setupListener() {
-      // Listen for UART data from Rust
-      unlisten = await listen<string>("uart-rx", (event) => {
-        const payload = event.payload;
-
-        setLines((currentLines) => [...currentLines, payload]);
-      });
-    }
-
-    setupListener();
+    const unlistenErr = listen<string>("uart-error", (event) => {
+      setLines((currentLines) => [...currentLines, `[ERROR] ${event.payload}`]);
+    });
 
     return () => {
-      // Remove listener when the component closes
-      if (unlisten) {
-        unlisten();
-      }
+      unlistenRx.then((u) => u());
+      unlistenErr.then((u) => u());
     };
   }, []);
 

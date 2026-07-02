@@ -51,28 +51,20 @@ export function TelemetryDashboard() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
-
-    async function setupTelemetryListener() {
-      unlisten = await listen<TelemetryPoint[] | string>("telemetry-update", (event) => {
-        try {
-          const normalizedData = normalizeTelemetryPayload(event.payload);
-          setTelemetryData(normalizedData);
-          setStatusMessage(`${normalizedData.length} telemetry records loaded.`);
-          setErrorMessage("");
-        } catch (error) {
-          setErrorMessage(String(error));
-          setStatusMessage("Failed to parse incoming payload.");
-        }
-      });
-    }
-
-    setupTelemetryListener();
+    const unlistenPromise = listen<TelemetryPoint[] | string>("telemetry-update", (event) => {
+      try {
+        const normalizedData = normalizeTelemetryPayload(event.payload);
+        setTelemetryData(normalizedData);
+        setStatusMessage(`${normalizedData.length} telemetry records loaded.`);
+        setErrorMessage("");
+      } catch (error) {
+        setErrorMessage(String(error));
+        setStatusMessage("Failed to parse incoming payload.");
+      }
+    });
 
     return () => {
-      if (unlisten) {
-        unlisten();
-      }
+      unlistenPromise.then((u) => u());
     };
   }, []);
 
