@@ -45,19 +45,35 @@ async fn connect_uart(app: AppHandle, state: tauri::State<'_, AppState>, port: S
     }
 
     // 1. Attempt to open the serial port
-    let mut serial_stream = tokio_serial::new(&port, baudrate)
-        .open_native_async()
-        .map_err(|e| format!("Failed to open port {}: {}", port, e))?;
-
-    // Required for Unix systems to prevent device lock errors
-    #[cfg(unix)]
-    serial_stream
-        .set_exclusive(false)
-        .map_err(|e| e.to_string())?;
+    let stream_pair: (Box<dyn tokio::io::AsyncRead + Unpin + Send>, Box<dyn tokio::io::AsyncWrite + Unpin + Send>) = match tokio_serial::new(&port, baudrate).open_native_async() {
+        Ok(mut serial_stream) => {
+            #[cfg(unix)]
+            let _ = serial_stream.set_exclusive(false);
+            let (r, w) = tokio::io::split(serial_stream);
+            (Box::new(r), Box::new(w))
+        }
+        Err(e) => {
+            // On macOS (Darwin) and Unix, virtual PTY devices (like /tmp/emidss_sim_port or /dev/ttys*)
+            // do not support hardware serial speed ioctls (IOSSIOSPEED), causing ENOTTY ("not a typewriter").
+            // Fall back to opening as an async character stream.
+            if port.contains("emidss_sim_port") || port.contains("tty") || port.contains("pts") || e.to_string().contains("typewriter") || e.to_string().contains("ENOTTY") || e.to_string().contains("Inappropriate ioctl") {
+                let file = tokio::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open(&port)
+                    .await
+                    .map_err(|fe| format!("Failed to open port {}: {} (fallback error: {})", port, e, fe))?;
+                let (r, w) = tokio::io::split(file);
+                (Box::new(r), Box::new(w))
+            } else {
+                return Err(format!("Failed to open port {}: {}", port, e));
+            }
+        }
+    };
 
     println!("Succesfully connected to {} at {} baud", port, baudrate);
 
-    let (reader, mut writer) = tokio::io::split(serial_stream);
+    let (reader, mut writer) = stream_pair;
     let (tx, mut rx) = mpsc::channel::<Vec<u8>>(32);
 
     // Store sender in state
