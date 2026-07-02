@@ -80,11 +80,13 @@ def main():
     except Exception as e:
         print(f"[WARNING] Could not create symlink {SIM_PORT_SYMLINK}: {e}")
 
-    # Close slave handle in simulator so Tauri app can acquire exclusive lock
-    try:
-        os.close(slave_fd)
-    except Exception:
-        pass
+    # On Linux, closing slave_fd allows Tauri app to acquire exclusive lock.
+    # On macOS (Darwin), slave_fd MUST stay open or macOS revokes the PTY causing ENOTTY (not a typewriter).
+    if sys.platform != "darwin":
+        try:
+            os.close(slave_fd)
+        except Exception:
+            pass
 
     print("=" * 68)
     print(" [EMIDSS-8 Hardware Simulator] Virtual Serial Port Active")
