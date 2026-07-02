@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { Download, LineChart as ChartIcon, AlertTriangle, Activity, Thermometer, Gauge } from "lucide-react";
 import {
   LineChart,
@@ -118,31 +119,37 @@ export function TelemetryDashboard() {
   }, [telemetryData]);
 
   // --- CSV Export Logic ---
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (timelineData.length === 0) return;
     const headers = ["time", "temp", "hum", "press", "isFault"];
     const csvRows = [headers.join(",")];
     for (const row of timelineData) {
       csvRows.push(`${row.time},${row.temp},${row.hum},${row.press},${row.isFault}`);
     }
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("href", url);
-    a.setAttribute("download", `EMIDSS_HISTORIC_${new Date().getTime()}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const filename = `EMIDSS_HISTORIC_${new Date().getTime()}.csv`;
+    try {
+      const savedPath = await invoke("export_csv", { filename, content: csvRows.join("\n") });
+      setStatusMessage(`CSV exported: ${savedPath}`);
+    } catch (err) {
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.setAttribute("href", url);
+      a.setAttribute("download", filename);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   // --- CHART COMPONENT ---
   const TimelineChart = ({ title, dataKey, color, data }: any) => (
-    <div className="flex-1 flex flex-col min-h-[180px] border-b border-zinc-800/50 last:border-b-0">
+    <div className="flex flex-col h-[210px] border-b border-zinc-800/50 last:border-b-0 shrink-0">
       <div className="px-4 py-2 bg-zinc-950/30 shrink-0">
         <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500">{title}</span>
       </div>
-      <div className="flex-1 w-full px-2 pb-2 pt-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="flex-1 w-full px-2 pb-2 pt-2 min-h-[160px]">
+        <ResponsiveContainer width="100%" height={160}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="2 2" stroke="#27272a" vertical={false} />
             <XAxis dataKey="time" stroke="#52525b" fontSize={10} tickMargin={8} minTickGap={20} />

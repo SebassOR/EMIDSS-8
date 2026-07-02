@@ -80,6 +80,12 @@ def main():
     except Exception as e:
         print(f"[WARNING] Could not create symlink {SIM_PORT_SYMLINK}: {e}")
 
+    # Close slave handle in simulator so Tauri app can acquire exclusive lock
+    try:
+        os.close(slave_fd)
+    except Exception:
+        pass
+
     print("=" * 68)
     print(" [EMIDSS-8 Hardware Simulator] Virtual Serial Port Active")
     print(f" Port Path: {SIM_PORT_SYMLINK} -> ({slave_name})")
@@ -128,8 +134,14 @@ def main():
                 os.remove(SIM_PORT_SYMLINK)
             except Exception:
                 pass
-        os.close(master_fd)
-        os.close(slave_fd)
+        try:
+            os.close(master_fd)
+        except Exception:
+            pass
+        try:
+            os.close(slave_fd)
+        except Exception:
+            pass
         print("[SIMULATOR] Closed cleanly.")
 
 

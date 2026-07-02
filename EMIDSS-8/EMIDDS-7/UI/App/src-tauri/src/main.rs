@@ -38,6 +38,12 @@ fn get_avaible_ports() -> Result<Vec<String>, String> {
 // Command 2: Async Serial Connection
 #[tauri::command]
 async fn connect_uart(app: AppHandle, state: tauri::State<'_, AppState>, port: String, baudrate: u32) -> Result<(), String> {
+    // Drop existing connection if any
+    {
+        let mut tx_guard = state.tx.lock().await;
+        *tx_guard = None;
+    }
+
     // 1. Attempt to open the serial port
     let mut serial_stream = tokio_serial::new(&port, baudrate)
         .open_native_async()
@@ -268,6 +274,23 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
     Ok(())
 }
 
+// Command 4: Export CSV directly to user filesystem
+#[tauri::command]
+fn export_csv(filename: String, content: String) -> Result<String, String> {
+    let mut path = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    if let Ok(home) = std::env::var("HOME") {
+        let downloads = std::path::PathBuf::from(&home).join("Downloads");
+        if downloads.exists() {
+            path = downloads;
+        } else {
+            path = std::path::PathBuf::from(&home);
+        }
+    }
+    let file_path = path.join(&filename);
+    std::fs::write(&file_path, content).map_err(|e| format!("Failed to save CSV file: {}", e))?;
+    Ok(file_path.to_string_lossy().to_string())
+}
+
 // Main Builder
 fn main() {
     tauri::Builder::default()
@@ -276,7 +299,7 @@ fn main() {
             tx: Mutex::new(None),
             waiting_for_response: Arc::new(Mutex::new(false)),
         })
-        .invoke_handler(tauri::generate_handler![get_avaible_ports, connect_uart, send_command])
+        .invoke_handler(tauri::generate_handler![get_avaible_ports, connect_uart, send_command, export_csv])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
