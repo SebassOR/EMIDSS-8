@@ -14,8 +14,8 @@ function App() {
     <main className="min-h-screen bg-[#0e0e0e] text-slate-100 font-sans selection:bg-slate-800">
       <div className="mx-auto flex max-w-[1440px] flex-col p-6 md:p-8">
         <header className="mb-8 flex flex-col justify-between gap-4 border-b border-[#262626] pb-5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center gap-3.5">
+            <img src="/emidss_logo.png" alt="EMIDSS Logo" className="h-8 w-8 object-contain" />
             <h1 className="text-sm font-bold uppercase tracking-[0.25em] text-white">
               EMIDSS-8 // TELEMETRY TOOL
             </h1>
