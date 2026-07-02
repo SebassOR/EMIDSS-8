@@ -271,7 +271,7 @@ export function TelemetryDashboard() {
                 {/* Oscillation Chart (Temp vs Pressure) */}
                 <div className="bg-[#121214] border border-zinc-800/50 rounded-sm flex flex-col h-[400px]">
                   <div className="px-4 py-3 border-b border-zinc-800/50">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400">Atmospheric Oscillation (Temp vs Pressure)</span>
+                    <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400">Atmospheric Profile (Temp, Humidity & Pressure Correlation)</span>
                   </div>
                   <div className="flex-1 p-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -287,6 +287,7 @@ export function TelemetryDashboard() {
                         />
                         <Area yAxisId="left" type="monotone" dataKey="temp" fill="#f87171" fillOpacity={0.1} stroke="none" />
                         <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#f87171" strokeWidth={2} dot={true} name="Temp (°C)" />
+                        <Line yAxisId="left" type="monotone" dataKey="hum" stroke="#60a5fa" strokeWidth={2} dot={true} connectNulls={true} name="Humidity (%)" />
                         <Line yAxisId="right" type="monotone" dataKey="press" stroke="#34d399" strokeWidth={2} dot={true} name="Press (hPa)" />
                       </ComposedChart>
                     </ResponsiveContainer>
