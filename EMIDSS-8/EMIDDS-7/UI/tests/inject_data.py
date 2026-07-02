@@ -14,6 +14,7 @@ import pty
 import select
 import sys
 import time
+import tty
 
 SIM_PORT_SYMLINK = "/tmp/emidss_sim_port"
 SAMPLE_DATA_FILE = os.path.join(os.path.dirname(__file__), "sample_data.tsv")
@@ -61,6 +62,10 @@ def main():
 
     # Create pseudo-terminal pair
     master_fd, slave_fd = pty.openpty()
+    try:
+        tty.setraw(slave_fd)
+    except Exception as e:
+        print(f"[WARNING] Could not set slave PTY to raw mode: {e}")
     slave_name = os.ttyname(slave_fd)
 
     # Create symlink for predictable UI port discovery

@@ -43,29 +43,25 @@ function App() {
           </nav>
         </header>
 
-        {activeSection === "operations" && (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-stretch">
-            <div className="flex flex-col lg:col-span-4 xl:col-span-3 rounded border border-[#262626] bg-[#121212] p-6 shrink-0 justify-between">
-              <div>
-                <ConnectionManager />
-              </div>
-              <div className="my-6 border-t border-[#262626]" />
-              <div>
-                <MissionControlPanel />
-              </div>
+        <div className={activeSection === "operations" ? "grid grid-cols-1 gap-8 lg:grid-cols-12 items-stretch" : "hidden"}>
+          <div className="flex flex-col lg:col-span-4 xl:col-span-3 rounded border border-[#262626] bg-[#121212] p-6 shrink-0 justify-between">
+            <div>
+              <ConnectionManager />
             </div>
-
-            <div className="lg:col-span-8 xl:col-span-9 rounded border border-[#262626] bg-[#121212] p-6 flex flex-col">
-              <TerminalConsole />
+            <div className="my-6 border-t border-[#262626]" />
+            <div>
+              <MissionControlPanel />
             </div>
           </div>
-        )}
 
-        {activeSection === "telemetry" && (
-          <div className="w-full">
-            <TelemetryDashboard />
+          <div className="lg:col-span-8 xl:col-span-9 rounded border border-[#262626] bg-[#121212] p-6 flex flex-col">
+            <TerminalConsole />
           </div>
-        )}
+        </div>
+
+        <div className={activeSection === "telemetry" ? "w-full" : "hidden"}>
+          <TelemetryDashboard />
+        </div>
       </div>
     </main>
   );
