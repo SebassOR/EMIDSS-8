@@ -57,14 +57,17 @@ async fn connect_uart(app: AppHandle, state: tauri::State<'_, AppState>, port: S
             // do not support hardware serial speed ioctls (IOSSIOSPEED), causing ENOTTY ("not a typewriter").
             // Fall back to opening as an async character stream.
             if port.contains("emidss_sim_port") || port.contains("tty") || port.contains("pts") || e.to_string().contains("typewriter") || e.to_string().contains("ENOTTY") || e.to_string().contains("Inappropriate ioctl") {
-                let file = tokio::fs::OpenOptions::new()
+                let r_file = tokio::fs::OpenOptions::new()
                     .read(true)
+                    .open(&port)
+                    .await
+                    .map_err(|fe| format!("Failed to open port reader {}: {} (fallback error: {})", port, e, fe))?;
+                let w_file = tokio::fs::OpenOptions::new()
                     .write(true)
                     .open(&port)
                     .await
-                    .map_err(|fe| format!("Failed to open port {}: {} (fallback error: {})", port, e, fe))?;
-                let (r, w) = tokio::io::split(file);
-                (Box::new(r), Box::new(w))
+                    .map_err(|fe| format!("Failed to open port writer {}: {} (fallback error: {})", port, e, fe))?;
+                (Box::new(r_file), Box::new(w_file))
             } else {
                 return Err(format!("Failed to open port {}: {}", port, e));
             }
@@ -87,6 +90,10 @@ async fn connect_uart(app: AppHandle, state: tauri::State<'_, AppState>, port: S
         while let Some(bytes) = rx.recv().await {
             if let Err(e) = writer.write_all(&bytes).await {
                 eprintln!("Failed to write to serial port: {}", e);
+                break;
+            }
+            if let Err(e) = writer.flush().await {
+                eprintln!("Failed to flush serial port: {}", e);
                 break;
             }
         }
