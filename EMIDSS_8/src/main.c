@@ -56,6 +56,8 @@ extern "C"{
 #define TP_SENSOR_ADDR										0x76 //0b1110110, D1=Pressure, D2=Temperature
 #define H_SENSOR_ADDR										0x40 //0b1000000
 
+
+#define TRANSMIT_TIME 		(10U)
 volatile int exit_code = 0;
 
 
@@ -114,18 +116,13 @@ int main(void)
     SPI_vInitMaster();
     // Sensor MS8607 INIT
 	//sensor_vInit();
+    uint8_t Timer_flag = 0;
 
-    float32 temp_degC = 0.0f;
-    float32 press_hPa = 0.0f;
-    float32 hum_pct   = 0.0f;
-
-    if (BME280_vInit(SPI_enSPI2) == OK)
+    if (BME280_vInit(SPI_enSPI2) != OK)
        {
-          /* Read Temperature, Pressure, and Humidity */
-          BME280_read_temperature_pressure_humidity(SPI_enSPI2, &temp_degC, &press_hPa, &hum_pct);
+          /* Sensor not connected */
+
        }
-
-
 
     /*****************************/
 
@@ -135,22 +132,26 @@ int main(void)
 
     // MEM_InitMemory();
 
-    test_iridium();
 
+    Transmit_task();
     while(1)
     {
-
-
         if(Delay_count_1_minute())//Called every 1m
        {
-           Time_increase_minute();
-            Task_1m();
+        	Timer_flag++;
        }
 
         if(Delay_count_1_second()) //Called every 1s
        {
             Task_1s();
        }
+
+        if( TRANSMIT_TIME  <=  Timer_flag )
+        {
+        	Transmit_task();
+        	Timer_flag = 0;
+        }
+
     }
 }
 

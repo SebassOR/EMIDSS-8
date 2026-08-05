@@ -93,32 +93,39 @@ static uint16_t build_sensor_string_struct(SensorData_t datos, char* out_buffer)
     return (uint16_t)(p - out_buffer);
 }
 
-static uint16_t build_sensor_short_labeled(SensorData_t datos, char* out_buffer)
+static uint16_t build_sensor_short_labeled(SensorData_t datos, uint8_t* out_buffer)
 {
     char temp_str[12];
     char hum_str[12];
     char pres_str[14];
-    char *p = out_buffer;
+    uint8_t *p = out_buffer;
 
     float_to_string(datos.temperature, temp_str);
     float_to_string(datos.humidity, hum_str);
     float_to_string(datos.pressure, pres_str);
 
     // T:<valor>
-    *p++ = 'T';
-    for (char *s = temp_str; *s; ++s) *p++ = *s;
-    *p++ = ' ';
+       *p++ = 'T';
+       *p++ = ':';  // <-- Added missing colon
+       for (uint8_t *s = temp_str; *s; ++s) *p++ = *s;
+       *p++ = ' ';
 
-    // H:<valor>
-    *p++ = 'H';
-    for (char *s = hum_str; *s; ++s) *p++ = *s;
-    *p++ = ' ';
+       // H:<valor>
+       *p++ = 'H';
+       *p++ = ':';  // <-- Added missing colon
+       for (uint8_t *s = hum_str; *s; ++s) *p++ = *s;
+       *p++ = ' ';
 
-    // P:<valor>
-    *p++ = 'P';
-    for (char *s = pres_str; *s; ++s) *p++ = *s;
+       // P:<valor>
+       *p++ = 'P';
+       *p++ = ':';  // <-- Added missing colon
+       for (uint8_t *s = pres_str; *s; ++s) *p++ = *s;
 
-    return (uint16_t)(p - out_buffer);
+       // Optional: Null-terminate so out_buffer is a valid C-string,
+       // but DO NOT increment 'p' so the returned length is just the payload bytes.
+       *p = '\0';
+
+       return (uint16_t)(p - out_buffer);
 }
 
 void Task_1s(void)/*Task Called Every 1s*/
@@ -188,7 +195,7 @@ void Task_1m(void)/*Task Called Every 1min*/
 	}
 }
 
-void test_iridium(void)
+void Transmit_task(void)
 {
 	SensorData_t sensorData;
 	Std_ReturnTypes SensorStatus = 0;
@@ -197,13 +204,12 @@ void test_iridium(void)
 	uint16_t Len = 0;
 	bool SendStatus = false;
 	uint32_t time_start = 0;
-	char TxMsg[100] = {0};
+	uint8_t TxMsg[100] = {0};
 	uint8_t SignalQlty = 0;
 
 	ModemState = Iridium9603_EnableModem();
 	if(ModemState)
 		{
-		const char *Test_Msg = "Hola Mundo";
 		uint8_t Len_test = 10;
 	//		Len = build_sensor_short_labeled(sensorData, TxMsg);
 //			Len = build_sensor_string_struct(sensorData, TxMsg);
@@ -218,7 +224,7 @@ void test_iridium(void)
 				{
 					(void)Iridium9603_ClearMOBuffer();
 					//SendStatus = Iridium9603_SendSBDText((uint8_t*)TxMsg, Len);
-					SendStatus = Iridium9603_SendSBDText(TxMsg, Len_test);
+					SendStatus = Iridium9603_SendSBDText(TxMsg, Len);
 				}
 
 				Delay_vMs(1000);
