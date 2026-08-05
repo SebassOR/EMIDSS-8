@@ -109,10 +109,10 @@ PortContainer_0_BOARD_InitPeripherals:
   - {pin_num: '141', peripheral: LPI2C1, signal: lpi2c1_sda, pin_signal: PTC6, direction: INPUT/OUTPUT, safeMode: outputOff, pullSelect: pullUp, pullEnable: enabled,
     InitValue: state_0}
   - {pin_num: '140', peripheral: LPI2C1, signal: lpi2c1_scl, pin_signal: PTC7, direction: INPUT/OUTPUT, pullSelect: pullUp, pullEnable: enabled}
-  - {pin_num: '1', peripheral: LPSPI1, signal: lpspi1_sout, pin_signal: PTA18, direction: OUTPUT}
-  - {pin_num: '3', peripheral: LPSPI1, signal: lpspi1_sin, pin_signal: PTA20, direction: INPUT}
-  - {pin_num: '123', peripheral: LPSPI1, signal: lpspi1_sck, pin_signal: PTA3, direction: INPUT}
-  - {pin_num: '102', peripheral: LPSPI1, signal: lpspi1_pcs1, pin_signal: PTA6, direction: INPUT/OUTPUT}
+  - {pin_num: '92', peripheral: LPSPI2, signal: lpspi2_pcs1, pin_signal: PTC10, direction: OUTPUT}
+  - {pin_num: '172', peripheral: LPSPI2, signal: lpspi2_sout, pin_signal: PTA8, direction: INPUT/OUTPUT}
+  - {pin_num: '68', peripheral: LPSPI2, signal: lpspi2_sck, pin_signal: PTC15, direction: INPUT/OUTPUT}
+  - {pin_num: '79', peripheral: LPSPI2, signal: lpspi2_sin, pin_signal: PTB2, direction: INPUT/OUTPUT}
   - {pin_num: '41', peripheral: LPI2C0, signal: lpi2c0_sda, pin_signal: PTD13, direction: INPUT/OUTPUT, pullSelect: pullUp, pullEnable: enabled}
   - {pin_num: '40', peripheral: LPI2C0, signal: lpi2c0_scl, pin_signal: PTD14, direction: INPUT/OUTPUT, pullSelect: pullUp, pullEnable: enabled}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********

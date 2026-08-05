@@ -18,11 +18,13 @@
 #include "Iridium9603_def.h"
 #include "Lpi2c_Ip.h"
 #include "Lpi2c_Ip_Sa_PBcfg.h"
+#include "SPI_MCAL_def.h"
+#include "../BSW/ecu/DRIVER_BME280/inc/bme280.h"
 //#define IO_REG  0x10
 //****************************************//
 
 #define IRIDIUM_TIMEOUT			(60000U) /*1 minute*/
-#define IRIDIUM_WAIT_CYCLE		(1)//changing to 1 to test EMDISS-8
+#define IRIDIUM_WAIT_CYCLE		(3)//changing to 1 to test EMDISS-8
 #define IRIDIUM_SIGNAL_OK		(4U)
 
 static uint32_t TxFlag = 0;
@@ -161,10 +163,10 @@ void Task_1m(void)/*Task Called Every 1min*/
 
 		if(ModemState)
 		{
+			BME280_read_temperature_pressure_humidity(SPI_enSPI2, &sensorData.temperature, &sensorData.pressure, &sensorData.humidity);
 			Len = build_sensor_short_labeled(sensorData, TxMsg);
-			//Len = build_sensor_string_struct(sensorData, TxMsg);
-
 			time_start = Delay_u32GetTicks();
+
 			while (Delay_u32GetTicks() - time_start < IRIDIUM_TIMEOUT  && !SendStatus)
 			{
 				SignalQlty = Iridium9603_GetSignalQuality();
@@ -205,6 +207,8 @@ void test_iridium(void)
 		uint8_t Len_test = 10;
 	//		Len = build_sensor_short_labeled(sensorData, TxMsg);
 //			Len = build_sensor_string_struct(sensorData, TxMsg);
+			BME280_read_temperature_pressure_humidity(SPI_enSPI2, &sensorData.temperature, &sensorData.pressure, &sensorData.humidity);
+			Len = build_sensor_short_labeled(sensorData, TxMsg);
 			time_start = Delay_u32GetTicks();
 			while (Delay_u32GetTicks() - time_start < IRIDIUM_TIMEOUT  && !SendStatus)
 			{
@@ -214,7 +218,7 @@ void test_iridium(void)
 				{
 					(void)Iridium9603_ClearMOBuffer();
 					//SendStatus = Iridium9603_SendSBDText((uint8_t*)TxMsg, Len);
-					SendStatus = Iridium9603_SendSBDText(Test_Msg, Len_test);
+					SendStatus = Iridium9603_SendSBDText(TxMsg, Len_test);
 				}
 
 				Delay_vMs(1000);

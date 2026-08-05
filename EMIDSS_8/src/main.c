@@ -51,7 +51,7 @@ extern "C"{
 #include <stdio.h>
 #include <string.h>
 #include "Iridium9603.h"
-
+#include "bme280.h"
 
 #define TP_SENSOR_ADDR										0x76 //0b1110110, D1=Pressure, D2=Temperature
 #define H_SENSOR_ADDR										0x40 //0b1000000
@@ -108,10 +108,24 @@ int main(void)
 
     // Initialiaze all system modules, Sensors, Modem, MEMORY, first system checkup.
 
-    I2C0_vInit();
+ //   I2C0_vInit();
     I2C1_vInit();
+
+    SPI_vInitMaster();
     // Sensor MS8607 INIT
 	//sensor_vInit();
+
+    float32 temp_degC = 0.0f;
+    float32 press_hPa = 0.0f;
+    float32 hum_pct   = 0.0f;
+
+    if (BME280_vInit(SPI_enSPI2) == OK)
+       {
+          /* Read Temperature, Pressure, and Humidity */
+          BME280_read_temperature_pressure_humidity(SPI_enSPI2, &temp_degC, &press_hPa, &hum_pct);
+       }
+
+
 
     /*****************************/
 
@@ -125,32 +139,18 @@ int main(void)
 
     while(1)
     {
-    	//uint8_t test_msg= "Im alive";
-    	//uint8_t msg_length = 8;
 
-        /* Test transmission on LPI2C_0 (Instance 0) */
-       //Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_0, 0x40, (boolean)false);
-       // Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_0, test_msg, msg_length, true, 0xFFFFFFU);
 
-        /* Test transmission on LPI2C_1 (Instance 1) */
-     //  Lpi2c_Ip_MasterSetSlaveAddr(I2C_INSTANCE_1, 0x63, (boolean)false);
-      // Lpi2c_Ip_MasterSendDataBlocking(I2C_INSTANCE_1, test_msg, msg_length, true, 0xFFFFFFU);
+        if(Delay_count_1_minute())//Called every 1m
+       {
+           Time_increase_minute();
+            Task_1m();
+       }
 
-        /* 
-         * Note: Delay_count functions need to be updated to use OsIf_GetCounter 
-         * instead of relying on the raw SysTick interrupt in Delay.c 
-         */
-
-  //      if(Delay_count_1_minute())//Called every 1m
-   //     {
-   //         Time_increase_minute();
-    //        Task_1m();
-     //   }
-
-       //8 if(Delay_count_1_second()) //Called every 1s
-       // {
-       //     Task_1s();
-       // }
+        if(Delay_count_1_second()) //Called every 1s
+       {
+            Task_1s();
+       }
     }
 }
 

@@ -36,6 +36,7 @@
 								<option id="com.nxp.s32ds.cle.arm.mbs.arm32.bare.tool.c.compiler.option.target.libraries.1068616893" name="Libraries support" superClass="com.nxp.s32ds.cle.arm.mbs.arm32.bare.tool.c.compiler.option.target.libraries" useByScannerDiscovery="false" value="com.nxp.s32ds.cle.arm.mbs.arm32.bare.tool.c.compiler.option.target.libraries.newlib_nano_noio" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.625109446" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../RTD/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/BSW/ecu/DRIVER_BME280/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/BSW/ecu/DRIVER_IOHWAB/DIO/IF/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/ASW/SWC_Main_Controller/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/BSW/ecu/TimeCounter/IF/Inc}&quot;"/>
@@ -763,7 +764,20 @@
 	<storageModule moduleId="com.nxp.s32ds.cle.uct.core">
 		<sdkComponents>platform.driver.osif;platform.driver.det;platform.driver.rte_osif;platform.driver.siul2_port;platform.driver.rte_port;platform.driver.Clock_Ip_ReferencePoints;platform.driver.rte_mcu;platform.driver.lpspi;platform.driver.rte_spi;platform.driver.siul2_dio;platform.driver.rte_dio;platform.driver.pins;platform.driver.clock;platform.driver.lpi2c;platform.driver.rte_i2c</sdkComponents>
 	</storageModule>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/EMIDSS_8"/>
+		</configuration>
+		<configuration configurationName="Release_RAM">
+			<resource resourceType="PROJECT" workspacePath="/EMIDSS_8"/>
+		</configuration>
+		<configuration configurationName="Debug_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/EMIDSS_8"/>
+		</configuration>
+		<configuration configurationName="Debug_RAM">
+			<resource resourceType="PROJECT" workspacePath="/EMIDSS_8"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
