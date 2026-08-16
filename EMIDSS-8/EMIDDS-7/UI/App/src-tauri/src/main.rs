@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
 use tokio_serial::SerialPortBuilderExt;
@@ -299,16 +299,17 @@ fn process_and_emit_dump(app: &AppHandle, lines: &[String]) -> Result<(), Box<dy
 
 // Command 4: Export CSV directly to user filesystem
 #[tauri::command]
-fn export_csv(filename: String, content: String) -> Result<String, String> {
-    let mut path = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    if let Ok(home) = std::env::var("HOME") {
-        let downloads = std::path::PathBuf::from(&home).join("Downloads");
-        if downloads.exists() {
-            path = downloads;
-        } else {
-            path = std::path::PathBuf::from(&home);
-        }
-    }
+fn export_csv(app: AppHandle, filename: String, content: String) -> Result<String, String> {
+    // Tauri's path resolver reads the OS's actual Downloads/home location
+    // (SHGetKnownFolderPath on Windows, HOME on macOS/Linux) instead of the
+    // HOME env var, which isn't set on Windows and would silently fall back
+    // to the current working directory there.
+    let path = app
+        .path()
+        .download_dir()
+        .or_else(|_| app.path().home_dir())
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+
     let file_path = path.join(&filename);
     std::fs::write(&file_path, content).map_err(|e| format!("Failed to save CSV file: {}", e))?;
     Ok(file_path.to_string_lossy().to_string())
