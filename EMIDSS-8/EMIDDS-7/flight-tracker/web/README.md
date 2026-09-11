@@ -1,4 +1,4 @@
-# EMIDSS-8 Mission Control Web
+# ITESAT-8 Mission Control Web
 
 React + TypeScript + Tailwind + Mapbox mission-control dashboard. Displays the
 flight's live position on a map, current sensor readings, atmospheric charts

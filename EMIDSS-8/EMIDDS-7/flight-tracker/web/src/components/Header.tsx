@@ -17,12 +17,20 @@ export function Header({
       <div className="flex items-center gap-2.5">
         <img src="/emidss_logo_64.png" alt="" className="h-7 w-7 rounded-sm" aria-hidden />
         <h1 className="text-sm font-semibold tracking-tight text-zinc-900 sm:text-base dark:text-zinc-50">
-          EMIDSS-8 Mission Control
+          ITESAT-8 Mission Control
         </h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <StatusBadge status={status} />
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        <a
+          href="https://github.com/isaac-evs"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:text-zinc-600 dark:hover:text-zinc-400"
+        >
+          built by isaac-evs
+        </a>
       </div>
     </header>
   );

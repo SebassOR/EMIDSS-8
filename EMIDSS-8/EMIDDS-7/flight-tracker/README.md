@@ -1,6 +1,6 @@
 # Flight Tracker
 
-Ingests EMIDSS-8 flight telemetry from the Rock7/RockBLOCK SBD webhook and
+Ingests ITESAT-8 flight telemetry from the Rock7/RockBLOCK SBD webhook and
 displays it live on a mission-control web dashboard.
 
 - [`infra/`](infra) — Terraform for the AWS backend (API Gateway, Lambda,
